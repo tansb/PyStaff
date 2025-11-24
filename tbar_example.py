@@ -118,10 +118,14 @@ print("Setting up the fit")
 # The code will use 'glob' to search for all templates matching the correct filenames.
 
 # tbar's project dir
-proj_dir = "/Users/tbarone/Desktop/Swinburne/AGEL/InitialMassFunction/stellar_pops_fitting/"
+# proj_dir = "/Users/tbarone/Desktop/Swinburne/AGEL/InitialMassFunction/stellar_pops_fitting/"
+# base_template_location = proj_dir + "alf_infiles/infiles/"
+# varelem_template_location = proj_dir + "alf_infiles/infiles/"
 
-base_template_location = proj_dir + "alf_infiles/infiles/"
-varelem_template_location = proj_dir + "alf_infiles/infiles/"
+ALF_proj_dir = "/fred/oz041/tbarone/softwares/softwares/alf_rosetta_stones/infiles"
+base_template_location = ALF_proj_dir + "/infiles/"
+varelem_template_location = ALF_proj_dir + "/infiles/"
+
 
 fit = SpectralFit(
     lamdas,
