@@ -16,6 +16,7 @@ m2r = "*"
 sphinx-rtd-theme = "*"
 ppxf = ">=7.3"
 ipython = "*"
+emcee="3.1.6"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^3.3.2"
