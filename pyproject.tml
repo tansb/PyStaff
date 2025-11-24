@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "pystaff"
+version = "0.1.0"
+description = ""
+authors = ["Tania Barone <tbarone@swin.edu.au>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+astropy = ">=2.0.3"
+matplotlib = ">=3"
+numpy = "^1.15.0"
+scipy = "^1.0.0"
+sphinxcontrib-napoleon = "*"
+m2r = "*"
+sphinx-rtd-theme = "*"
+ppxf = ">=7.3"
+ipython = "*"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^3.3.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
