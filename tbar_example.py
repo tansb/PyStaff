@@ -122,7 +122,7 @@ print("Setting up the fit")
 # base_template_location = proj_dir + "alf_infiles/infiles/"
 # varelem_template_location = proj_dir + "alf_infiles/infiles/"
 
-ALF_proj_dir = "/fred/oz041/tbarone/softwares/softwares/alf_rosetta_stones/infiles"
+ALF_proj_dir = "/fred/oz041/tbarone/softwares/softwares/alf_rosetta_stones/"
 base_template_location = ALF_proj_dir + "/infiles/"
 varelem_template_location = ALF_proj_dir + "/infiles/"
 
