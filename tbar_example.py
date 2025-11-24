@@ -50,10 +50,7 @@ element_imf = "kroupa"
 
 ####################################################
 # Read in the data
-datafile = (
-    "/Users/tbarone/Desktop/Swinburne/AGEL/InitialMassFunction/stellar_pops_fitting/"
-    "data_and_spectra/red_eyebrow/alf_infiles/REB_jwst.dat"
-)
+datafile = "data/REB_jwst.dat"
 lamdas_orig, flux_orig, errors, pixel_weights, _ = np.genfromtxt(datafile, unpack=True)
 
 # need to make the wavelength scale slightly more consistent.
