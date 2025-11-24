@@ -7,6 +7,7 @@ import emcee
 import scipy.interpolate as si
 import lmfit as LM
 import matplotlib.pyplot as plt
+import corner
 
 import sys
 
@@ -14,8 +15,6 @@ from pystaff.SpectralFitting import SpectralFit
 from pystaff import SpectralFitting_functs as SF
 
 from schwimmbad import MultiPool
-
-plt.ion()
 
 
 # Likelihood function here. We could put it in the SpectraFitting class, but when
@@ -64,6 +63,7 @@ fig, ax = plt.subplots()
 ax.plot(lamdas_orig, flux_orig, lw=0.5, label="Original wavelength grid")
 ax.plot(lamdas, flux, lw=0.5, label="Interpolated flux/wavelength")
 ax.legend()
+
 
 # The instrumental resolution can be included if it's known. We need a value of sigma_inst in km/s
 # for every pixel. Otherwise leave it as None
@@ -122,7 +122,7 @@ print("Setting up the fit")
 # base_template_location = proj_dir + "alf_infiles/infiles/"
 # varelem_template_location = proj_dir + "alf_infiles/infiles/"
 
-ALF_proj_dir = "/fred/oz041/tbarone/softwares/softwares/alf_rosetta_stones/"
+ALF_proj_dir = "/fred/oz041/tbarone/softwares/alf_rosetta_stones/"
 base_template_location = ALF_proj_dir + "/infiles/"
 varelem_template_location = ALF_proj_dir + "/infiles/"
 
@@ -334,6 +334,9 @@ nproc = 4  # tweak as appropriate for your machine
 print(f"Using MultiPool with {nproc} processes")
 with MultiPool(processes=nproc) as pool:
     main(pool=pool)
+
+
+plt.savefig("figs/fit_results.pdf")
 
 ####################################################################################################
 
