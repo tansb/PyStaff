@@ -49,8 +49,16 @@ class Spectrum(object):
 
     global c, pc, d_sun
 
-    def __init__(self, lam=None, lamspec=None, errlamspec=None, age=None, Z=None, wavesyst=None, userdict=None):
-
+    def __init__(
+        self,
+        lam=None,
+        lamspec=None,
+        errlamspec=None,
+        age=None,
+        Z=None,
+        wavesyst=None,
+        userdict=None,
+    ):
         """
         Inputs:
         -------
@@ -124,9 +132,9 @@ class Spectrum(object):
 
         # add VAC or AIR
         if wavesyst is not None:
-            if (wavesyst == "vac" or wavesyst == "VAC" or wavesyst == "Vac"):
+            if wavesyst == "vac" or wavesyst == "VAC" or wavesyst == "Vac":
                 self.wavesyst = "vac"
-            elif (wavesyst == "air" or wavesyst == "AIR" or wavesyst == "Air"):
+            elif wavesyst == "air" or wavesyst == "AIR" or wavesyst == "Air":
                 self.wavesyst = "air"
             else:
                 raise ValueError("wavesyst not understood. Should be air or vac.")
@@ -145,7 +153,9 @@ class Spectrum(object):
 
 
 def checkDims(var, varname, parentShape):
-    assert (np.isscalar(var)) or (np.all(np.equal(np.array(var).shape, parentShape))), varname + " dimensions not understood."
+    assert (np.isscalar(var)) or (np.all(np.equal(np.array(var).shape, parentShape))), (
+        varname + " dimensions not understood."
+    )
 
 
 def singleOrList2Array(invar):
@@ -170,9 +180,9 @@ def singleOrList2Array(invar):
     # return
     return rval
 
-def load_varelem_CvD16ssps(varelem_template_location, imf='kroupa', verbose=True):
 
-    '''
+def load_varelem_CvD16ssps(varelem_template_location, imf="kroupa", verbose=True):
+    """
     Load the CvD16 spectra (response functions) with variable elemental abundances.
 
     Arguments:
@@ -190,26 +200,65 @@ def load_varelem_CvD16ssps(varelem_template_location, imf='kroupa', verbose=True
         >>> spectra=load_varelem_CvD16ssps(dirname='/path/to/dir', folder='folder', imf='kroupa')
         >>> spectra['Na+'] #Gives all RFs with [Na/H]=+0.3
 
-    '''
+    """
 
     varelem_template_location = os.path.expanduser(varelem_template_location)
 
-    if imf in ['kroupa', 'krpa', 'Kroupa', 'Krpa']:
-        model_spectra = sorted(glob.glob('{}/atlas_ssp_*.krpa.s100'.format(varelem_template_location)))
-        imf_name = 'krpa'
-    elif imf in ['Salpeter', 'salpeter', 'salp', 'Salp']:
-        model_spectra = sorted(glob.glob('{}/atlas_ssp_*.salp.s100'.format(varelem_template_location)))
-        imf_name = 'salp'
+    if imf in ["kroupa", "krpa", "Kroupa", "Krpa"]:
+        model_spectra = sorted(
+            glob.glob("{}/atlas_ssp_*.krpa.s100".format(varelem_template_location))
+        )
+        imf_name = "krpa"
+    elif imf in ["Salpeter", "salpeter", "salp", "Salp"]:
+        model_spectra = sorted(
+            glob.glob("{}/atlas_ssp_*.salp.s100".format(varelem_template_location))
+        )
+        imf_name = "salp"
     else:
-        raise NameError('IMF type not understood')
+        raise NameError("IMF type not understood")
 
     data = np.genfromtxt(model_spectra[0])
     lams = data[:, 0]
 
-    model_Zs_names = ['m1.5', 'm1.0', 'm0.5', 'p0.0', 'p0.2']
-    model_age_names = ['01', '03', '05', '09', '13']
+    model_Zs_names = ["m1.5", "m1.0", "m0.5", "p0.0", "p0.2"]
+    model_age_names = ["01", "03", "05", "09", "13"]
 
-    model_elem_order = ['Solar', 'Na+', 'Na-', 'Ca+', 'Ca-', 'Fe+', 'Fe-', 'C+', 'C-', 'a/Fe+', 'N+', 'N-', 'as/Fe+', 'Ti+', 'Ti-', 'Mg+', 'Mg-', 'Si+', 'Si-', 'T+', 'T-', 'Cr+', 'Mn+', 'Ba+', 'Ba-', 'Ni+', 'Co+', 'Eu+', 'Sr+', 'K+', 'V+', 'Cu+', 'Na+0.6', 'Na+0.9']
+    model_elem_order = [
+        "Solar",
+        "Na+",
+        "Na-",
+        "Ca+",
+        "Ca-",
+        "Fe+",
+        "Fe-",
+        "C+",
+        "C-",
+        "a/Fe+",
+        "N+",
+        "N-",
+        "as/Fe+",
+        "Ti+",
+        "Ti-",
+        "Mg+",
+        "Mg-",
+        "Si+",
+        "Si-",
+        "T+",
+        "T-",
+        "Cr+",
+        "Mn+",
+        "Ba+",
+        "Ba-",
+        "Ni+",
+        "Co+",
+        "Eu+",
+        "Sr+",
+        "K+",
+        "V+",
+        "Cu+",
+        "Na+0.6",
+        "Na+0.9",
+    ]
 
     Zs = [-1.5, -1.0, -0.5, 0.0, 0.2]
     ages = [float(a) for a in model_age_names]
@@ -223,9 +272,11 @@ def load_varelem_CvD16ssps(varelem_template_location, imf='kroupa', verbose=True
     for a, Z in enumerate(model_Zs_names):
         for b, age in enumerate(model_age_names):
 
-            model = glob.glob('{}/atlas_ssp*t{}*{}*{}.s100'.format(varelem_template_location, age, Z, imf_name))[0]
+            model = glob.glob(
+                "{}/atlas_ssp*t{}*{}*{}.s100".format(varelem_template_location, age, Z, imf_name)
+            )[0]
             if verbose:
-                print('Loading {}'.format(model))
+                print("Loading {}".format(model))
             data = np.genfromtxt(model)
 
             for i, elem in enumerate(model_elem_order):
@@ -237,13 +288,26 @@ def load_varelem_CvD16ssps(varelem_template_location, imf='kroupa', verbose=True
         age_values = np.repeat(ages, n_zs).reshape(n_ages, n_zs)
         Z_values = np.repeat(Zs, n_ages).reshape(n_zs, n_ages).T
 
-        spectra[elem] = Spectrum(lam=lams, lamspec=templates[i, :, :, :], age=age_values, Z=Z_values, wavesyst='vac', userdict={'elem': elem})
+        spectra[elem] = Spectrum(
+            lam=lams,
+            lamspec=templates[i, :, :, :],
+            age=age_values,
+            Z=Z_values,
+            wavesyst="vac",
+            userdict={"elem": elem},
+        )
 
     return spectra
 
 
 ################################################################################################################################################################
-def prepare_CvD_interpolator_twopartIMF(base_template_location, templates_lam_range, velscale, verbose=True, instrumental_resolution=None):
+def prepare_CvD_interpolator_twopartIMF(
+    base_template_location,
+    templates_lam_range,
+    velscale,
+    verbose=True,
+    instrumental_resolution=None,
+):
     """
     Set up the interpolator for the base SSP spectra using the log-rebinned templates we get from `prepare_CvD2_templates_twopartIMF`.
 
@@ -258,30 +322,44 @@ def prepare_CvD_interpolator_twopartIMF(base_template_location, templates_lam_ra
             * interp: the interpolate object. Axes are wavelength, age, Z, imf_x1 and imf_x2
             * logLam_template: the log-rebinned wavelength array of the templates
     """
-    templates, logLam_template = prepare_CvD2_templates_twopartIMF(base_template_location, templates_lam_range, velscale, verbose=verbose, instrumental_resolution=instrumental_resolution)
+    templates, logLam_template = prepare_CvD2_templates_twopartIMF(
+        base_template_location,
+        templates_lam_range,
+        velscale,
+        verbose=verbose,
+        instrumental_resolution=instrumental_resolution,
+    )
 
     nimfs = 16
-    ages = [1., 3., 5., 7., 9., 11.0, 13.5]
+    ages = [1.0, 3.0, 5.0, 7.0, 9.0, 11.0, 13.5]
     Zs = [-1.5, -1.0, -0.5, 0.0, 0.2]
     n_imfs = 16
     imfs_X1 = 0.5 + np.arange(n_imfs) / 5.0
     imfs_X2 = 0.5 + np.arange(n_imfs) / 5.0
 
-    linear_interp = si.RegularGridInterpolator(((logLam_template, ages, Zs, imfs_X1, imfs_X2)), templates, bounds_error=False, fill_value=None)
+    linear_interp = si.RegularGridInterpolator(
+        ((logLam_template, ages, Zs, imfs_X1, imfs_X2)),
+        templates,
+        bounds_error=False,
+        fill_value=None,
+    )
 
     return linear_interp, logLam_template
 
+
 ################################################################################################################################################################
 
-def prepare_CvD2_templates_twopartIMF(template_location, templates_lam_range, velscale, verbose=True, instrumental_resolution=None):
 
-    '''
+def prepare_CvD2_templates_twopartIMF(
+    template_location, templates_lam_range, velscale, verbose=True, instrumental_resolution=None
+):
+    """
     Load the CvD16 base spectra, those that vary age, [Z/H] and the IMF. The templates are log-rebinned to have a uniform wavelength
-    spacing in **log** wavelength, to ensure the difference in velocity between two adjacent pixels is the same, regardless of wavelength. 
+    spacing in **log** wavelength, to ensure the difference in velocity between two adjacent pixels is the same, regardless of wavelength.
 
     They are returned in an array of shape (n_ages, n_Zs, n_pixels).
 
-    Arguments: 
+    Arguments:
         templates_lam_range (array-like): A 2 component vector with the start and stop wavelengths we want for the templates
         velscale (float): The velocity difference between two adjacent pixels in the log-rebinned spectrum. Use the same value
         for the templates as you *measure* from the spectrum!
@@ -290,83 +368,101 @@ def prepare_CvD2_templates_twopartIMF(template_location, templates_lam_range, ve
         (tuple): A two component tuple:
             * templates (array): An array of templates with shape (N_wavelength, N_ages, N_metallicities, N_imf_x1, N_imf_x2)
             * logLam_template (array): The log-rebinned wavelength array of the templates
-    '''
-    
-    template_glob=os.path.expanduser(f'{template_location}/VCJ_v8_mcut0.08_t*')
+    """
 
-    vcj_models=sorted(glob.glob(template_glob))
-    models=np.genfromtxt(vcj_models[-1])
+    template_glob = os.path.expanduser(f"{template_location}/VCJ_v8_mcut0.08_t*")
 
-    temp_lamdas=models[:, 0]
+    vcj_models = sorted(glob.glob(template_glob))
+    models = np.genfromtxt(vcj_models[-1])
 
-    n_ages=7
-    n_zs=5
-    n_imfs=16
+    temp_lamdas = models[:, 0]
 
-    
+    n_ages = 7
+    n_zs = 5
+    n_imfs = 16
 
+    Zs = ["m1.5", "m1.0", "m0.5", "p0.0", "p0.2"]
+    ages = ["01.0", "03.0", "05.0", "07.0", "09.0", "11.0", "13.5"]
+    imfs_X1 = 0.5 + np.arange(n_imfs) / 5.0
+    imfs_X2 = 0.5 + np.arange(n_imfs) / 5.0
 
-    Zs=['m1.5', 'm1.0', 'm0.5', 'p0.0', 'p0.2']
-    ages=['01.0', '03.0', '05.0', '07.0', '09.0', '11.0', '13.5']
-    imfs_X1=0.5+np.arange(n_imfs)/5.0
-    imfs_X2=0.5+np.arange(n_imfs)/5.0
+    t_mask = (temp_lamdas > templates_lam_range[0]) & (temp_lamdas < templates_lam_range[1])
 
-    t_mask = ((temp_lamdas > templates_lam_range[0]) & (temp_lamdas <templates_lam_range[1]))
+    y = models[t_mask, 1]
+    x = temp_lamdas[t_mask]
+    # Make a new lamda array, carrying on the delta lamdas of high resolution bit
+    new_x = temp_lamdas[t_mask][0] + 0.9 * (
+        np.arange(np.ceil((temp_lamdas[t_mask][-1] - temp_lamdas[t_mask][0]) / 0.9)) + 1
+    )
+    interp = si.interp1d(x, y, fill_value="extrapolate")
+    out = interp(new_x)
 
+    sspNew, logLam_template, template_velscale = P.log_rebin(
+        templates_lam_range, out, velscale=velscale
+    )
+    templates = np.empty((len(sspNew), n_ages, n_zs, len(imfs_X1), len(imfs_X2)))
 
+    # Resolution of the templates in km/s
 
-    y=models[t_mask, 1]
-    x=temp_lamdas[t_mask]
-    #Make a new lamda array, carrying on the delta lamdas of high resolution bit
-    new_x=temp_lamdas[t_mask][0]+0.9*(np.arange(np.ceil((temp_lamdas[t_mask][-1]-temp_lamdas[t_mask][0])/0.9))+1)
-    interp=si.interp1d(x, y, fill_value='extrapolate')
-    out=interp(new_x)
-
-    sspNew, logLam_template, template_velscale = P.log_rebin(templates_lam_range, out, velscale=velscale)
-    templates=np.empty((len(sspNew), n_ages, n_zs, len(imfs_X1), len(imfs_X2)))
-
-    #Resolution of the templates in km/s
-
-    for a, Z in enumerate(Zs):    
+    for a, Z in enumerate(Zs):
         for b, age in enumerate(ages):
-            model=glob.glob(os.path.expanduser(f'{template_location}/VCJ_v8_mcut0.08_t{age}*{Z}.ssp.imf_varydoublex.s100'))[0]
-            print('Loading {}'.format(model))
-            data=np.genfromtxt(model)
+            model = glob.glob(
+                os.path.expanduser(
+                    f"{template_location}/VCJ_v8_mcut0.08_t{age}*{Z}.ssp.imf_varydoublex.s100"
+                )
+            )[0]
+            print("Loading {}".format(model))
+            data = np.genfromtxt(model)
 
             for c, counter1 in enumerate(imfs_X1):
                 for d, counter2 in enumerate(imfs_X2):
-                
-                    #Interpolate templates onto a uniform wavelength grid and then log-rebin
-                    y=data[:, c*n_imfs+d+1][t_mask]   
-                    x=temp_lamdas[t_mask]
-                    
-                    #Make a new lamda array, carrying on the delta lamdas of high resolution bit
-                    new_x=temp_lamdas[t_mask][0]+0.9*(np.arange(np.ceil((temp_lamdas[t_mask][-1]-temp_lamdas[t_mask][0])/0.9))+1)
 
-                    interp=si.interp1d(x, y, fill_value='extrapolate')
-                    out=interp(new_x)
+                    # Interpolate templates onto a uniform wavelength grid and then log-rebin
+                    y = data[:, c * n_imfs + d + 1][t_mask]
+                    x = temp_lamdas[t_mask]
 
-                    #log rebin them
-                    sspNew, logLam_template, template_velscale = P.log_rebin(templates_lam_range, out, velscale=velscale)
+                    # Make a new lamda array, carrying on the delta lamdas of high resolution bit
+                    new_x = temp_lamdas[t_mask][0] + 0.9 * (
+                        np.arange(
+                            np.ceil((temp_lamdas[t_mask][-1] - temp_lamdas[t_mask][0]) / 0.9)
+                        )
+                        + 1
+                    )
+
+                    interp = si.interp1d(x, y, fill_value="extrapolate")
+                    out = interp(new_x)
+
+                    # log rebin them
+                    sspNew, logLam_template, template_velscale = P.log_rebin(
+                        templates_lam_range, out, velscale=velscale
+                    )
                     if instrumental_resolution is not None:
-                        sspNew = P.gaussian_filter1d(sspNew, instrumental_resolution/velscale)
+                        sspNew = P.gaussian_filter1d(sspNew, instrumental_resolution / velscale)
 
-                    templates[:, b, a, c, d]=sspNew#/np.median(sspNew)
+                    templates[:, b, a, c, d] = sspNew  # /np.median(sspNew)
 
     return templates, logLam_template
 
-################################################################################################################################################################
-
 
 ################################################################################################################################################################
-def prepare_CvD_correction_interpolators(varelem_template_location, templates_lam_range, velscale, elements, verbose=True, element_imf='kroupa', instrumental_resolution=None):
 
+
+################################################################################################################################################################
+def prepare_CvD_correction_interpolators(
+    varelem_template_location,
+    templates_lam_range,
+    velscale,
+    elements,
+    verbose=True,
+    element_imf="kroupa",
+    instrumental_resolution=None,
+):
     """
     Set up the interpolator for the response functions using the log-rebinned templates we get from `prepare_CvD2_element_templates`.
-    The response functions allow for variation in a general set of elements (Fe, Ca, Mg, etc), a set of elements which can only be 
-    positive (Mn, K, V, etc), and Sodium, which can be extended from -0.3 dex to +1.0 dex. We have to treat each of these cases 
-    separately, so we end up with three different interpolation objects. You can also vary the effective temperature of the isochrone, 
-    but this is now deprecated in V2. 
+    The response functions allow for variation in a general set of elements (Fe, Ca, Mg, etc), a set of elements which can only be
+    positive (Mn, K, V, etc), and Sodium, which can be extended from -0.3 dex to +1.0 dex. We have to treat each of these cases
+    separately, so we end up with three different interpolation objects. You can also vary the effective temperature of the isochrone,
+    but this is now deprecated in V2.
 
     Arguments:
         templates_lam_range (array-like): A 2 component vector with the start and stop wavelengths we want for the templates
@@ -383,270 +479,401 @@ def prepare_CvD_correction_interpolators(varelem_template_location, templates_la
             * logLam_template: The log-rebinned wavelength array of the templates
     """
 
-    all_corrections, logLam_template=prepare_CvD2_element_templates(varelem_template_location, templates_lam_range, velscale, elements, verbose=verbose, element_imf=element_imf, instrumental_resolution=instrumental_resolution)
+    all_corrections, logLam_template = prepare_CvD2_element_templates(
+        varelem_template_location,
+        templates_lam_range,
+        velscale,
+        elements,
+        verbose=verbose,
+        element_imf=element_imf,
+        instrumental_resolution=instrumental_resolution,
+    )
 
-    general_templates, na_templates, carbon_templates, positive_only_templates, T_templates=all_corrections
+    general_templates, na_templates, carbon_templates, positive_only_templates, T_templates = (
+        all_corrections
+    )
 
-    positive_only_elems, Na_elem, Carbon_elem, normal_elems=elements
+    positive_only_elems, Na_elem, Carbon_elem, normal_elems = elements
 
+    # It's not clear if the last value here should be 13.5 or 13
+    ages = np.array([1.0, 3.0, 5.0, 9.0, 13.0])
+    Zs = [-1.5, -1.0, -0.5, 0.0, 0.2]
 
-    #It's not clear if the last value here should be 13.5 or 13
-    ages=np.array([  1.,   3.,   5.,   9.,  13.0])
-    Zs=[-1.5, -1.0, -0.5, 0.0, 0.2]
-
-
-    elem_steps=[-0.45, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.45]
-    Na_elem_steps=[-0.45, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    elem_steps = [-0.45, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.45]
+    Na_elem_steps = [
+        -0.45,
+        -0.3,
+        -0.2,
+        -0.1,
+        0.0,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9,
+        1.0,
+    ]
     C_elem_steps = [-0.2, -0.15, -0.1, -0.05, 0.0, 0.05, 0.1, 0.15, 0.2]
-    positive_only_elem_steps=[0.0, 0.1, 0.2, 0.3, 0.45]
-    T_steps=[-50.0, -40.0, -30.0, -20.0, -10.0, 0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
-    
-    na_interp=si.RegularGridInterpolator(((Na_elem_steps, ages, Zs, logLam_template)), na_templates, bounds_error=False, fill_value=None, method='linear')
+    positive_only_elem_steps = [0.0, 0.1, 0.2, 0.3, 0.45]
+    T_steps = [-50.0, -40.0, -30.0, -20.0, -10.0, 0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
 
-    carbon_interp = si.RegularGridInterpolator(((C_elem_steps, ages, Zs, logLam_template)), carbon_templates, bounds_error=False, fill_value=None, method='linear')
+    na_interp = si.RegularGridInterpolator(
+        ((Na_elem_steps, ages, Zs, logLam_template)),
+        na_templates,
+        bounds_error=False,
+        fill_value=None,
+        method="linear",
+    )
 
-    T_interp=si.RegularGridInterpolator(((T_steps, ages, Zs, logLam_template)), T_templates, bounds_error=False, fill_value=None, method='linear')
+    carbon_interp = si.RegularGridInterpolator(
+        ((C_elem_steps, ages, Zs, logLam_template)),
+        carbon_templates,
+        bounds_error=False,
+        fill_value=None,
+        method="linear",
+    )
 
-    #If we only have one positive element to check, we need to do something different- can't have a dimension with only one element in RegularGridInterpolator apparently.
-    if len(positive_only_elems)>1:
-        positive_only_interp=si.RegularGridInterpolator(((np.arange(len(positive_only_elems)), positive_only_elem_steps, ages, Zs, logLam_template)), positive_only_templates, bounds_error=False, fill_value=None, method='linear')
+    T_interp = si.RegularGridInterpolator(
+        ((T_steps, ages, Zs, logLam_template)),
+        T_templates,
+        bounds_error=False,
+        fill_value=None,
+        method="linear",
+    )
+
+    # If we only have one positive element to check, we need to do something different- can't have a dimension with only one element in RegularGridInterpolator apparently.
+    if len(positive_only_elems) > 1:
+        positive_only_interp = si.RegularGridInterpolator(
+            (
+                (
+                    np.arange(len(positive_only_elems)),
+                    positive_only_elem_steps,
+                    ages,
+                    Zs,
+                    logLam_template,
+                )
+            ),
+            positive_only_templates,
+            bounds_error=False,
+            fill_value=None,
+            method="linear",
+        )
     else:
-        positive_only_interp=si.RegularGridInterpolator((positive_only_elem_steps, ages, Zs, logLam_template), positive_only_templates[0, :], bounds_error=False, fill_value=None, method='linear')
+        positive_only_interp = si.RegularGridInterpolator(
+            (positive_only_elem_steps, ages, Zs, logLam_template),
+            positive_only_templates[0, :],
+            bounds_error=False,
+            fill_value=None,
+            method="linear",
+        )
 
-    if len(normal_elems)>1:
-        general_interp=si.RegularGridInterpolator(((np.arange(len(normal_elems)), elem_steps, ages, Zs, logLam_template)), general_templates, bounds_error=False, fill_value=None, method='linear')
+    if len(normal_elems) > 1:
+        general_interp = si.RegularGridInterpolator(
+            ((np.arange(len(normal_elems)), elem_steps, ages, Zs, logLam_template)),
+            general_templates,
+            bounds_error=False,
+            fill_value=None,
+            method="linear",
+        )
     else:
-        general_interp=si.RegularGridInterpolator((elem_steps, ages, Zs, logLam_template), general_templates[0, :], bounds_error=False, fill_value=None, method='linear')
-    
+        general_interp = si.RegularGridInterpolator(
+            (elem_steps, ages, Zs, logLam_template),
+            general_templates[0, :],
+            bounds_error=False,
+            fill_value=None,
+            method="linear",
+        )
 
-    correction_interps=[general_interp, na_interp, carbon_interp, positive_only_interp, T_interp]
+    correction_interps = [general_interp, na_interp, carbon_interp, positive_only_interp, T_interp]
 
     return correction_interps, logLam_template
 
+
 ##########
+
 
 def new_wavelength_array_high_resolution(wavelengths):
     """
-    The templates have different spacings in wavelength between the blue and red ends. This function makes a new set of wavelength values which ensures the same wavelength spacing throughout 
+    The templates have different spacings in wavelength between the blue and red ends. This function makes a new set of wavelength values which ensures the same wavelength spacing throughout
     """
 
-    new_wavelength_array = wavelengths[0]+0.9*(np.arange(np.ceil((wavelengths[-1]-wavelengths[0])/0.9))+1)
+    new_wavelength_array = wavelengths[0] + 0.9 * (
+        np.arange(np.ceil((wavelengths[-1] - wavelengths[0]) / 0.9)) + 1
+    )
 
     return new_wavelength_array
 
-def prepare_CvD2_element_templates(varelem_template_location, templates_lam_range, velscale, elements, verbose=True, element_imf='kroupa', instrumental_resolution=None):
 
-    var_elem_spectra=load_varelem_CvD16ssps(varelem_template_location, imf=element_imf)
+def prepare_CvD2_element_templates(
+    varelem_template_location,
+    templates_lam_range,
+    velscale,
+    elements,
+    verbose=True,
+    element_imf="kroupa",
+    instrumental_resolution=None,
+):
 
-    ages=var_elem_spectra['Solar'].age[:, 0]
-    Zs=var_elem_spectra['Solar'].Z[0, :]
-    n_ages=len(ages)
-    n_Zs=len(Zs)
+    var_elem_spectra = load_varelem_CvD16ssps(varelem_template_location, imf=element_imf)
 
-    temp_lamdas=var_elem_spectra['Solar'].lam
+    ages = var_elem_spectra["Solar"].age[:, 0]
+    Zs = var_elem_spectra["Solar"].Z[0, :]
+    n_ages = len(ages)
+    n_Zs = len(Zs)
 
-    t_mask = ((temp_lamdas > templates_lam_range[0]) & (temp_lamdas <templates_lam_range[1]))
+    temp_lamdas = var_elem_spectra["Solar"].lam
 
+    t_mask = (temp_lamdas > templates_lam_range[0]) & (temp_lamdas < templates_lam_range[1])
 
-    positive_only_elems, Na_elem, Carbon_elem, normal_elems=elements
+    positive_only_elems, Na_elem, Carbon_elem, normal_elems = elements
 
-    elem_steps=[-0.45, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.45]
-    Na_elem_steps=[-0.45, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    elem_steps = [-0.45, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.45]
+    Na_elem_steps = [
+        -0.45,
+        -0.3,
+        -0.2,
+        -0.1,
+        0.0,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9,
+        1.0,
+    ]
     C_elem_steps = [-0.2, -0.15, -0.1, -0.05, 0.0, 0.05, 0.1, 0.15, 0.2]
-    positive_only_elem_steps=[0.0, 0.1, 0.2, 0.3, 0.45]
-    T_steps=[-50.0, -40.0, -30.0, -20.0, -10.0, 0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
+    positive_only_elem_steps = [0.0, 0.1, 0.2, 0.3, 0.45]
+    T_steps = [-50.0, -40.0, -30.0, -20.0, -10.0, 0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
 
-    x=var_elem_spectra['Solar'].lam[t_mask]
-    y=var_elem_spectra['Solar'].flam[-1, -1, t_mask]
-    #Make a new lamda array, carrying on the delta lamdas of high resolution bit
-    new_x = new_wavelength_array_high_resolution(var_elem_spectra['Solar'].lam[t_mask])
-    interp=si.interp1d(x, y, fill_value='extrapolate')
-    data=interp(new_x)
+    x = var_elem_spectra["Solar"].lam[t_mask]
+    y = var_elem_spectra["Solar"].flam[-1, -1, t_mask]
+    # Make a new lamda array, carrying on the delta lamdas of high resolution bit
+    new_x = new_wavelength_array_high_resolution(var_elem_spectra["Solar"].lam[t_mask])
+    interp = si.interp1d(x, y, fill_value="extrapolate")
+    data = interp(new_x)
 
+    sspNew, logLam_template, template_velscale = P.log_rebin(
+        templates_lam_range, data, velscale=velscale
+    )
 
-    sspNew, logLam_template, template_velscale = P.log_rebin(templates_lam_range, data, velscale=velscale)
-
-
-    positive_only_templates = np.empty((len(positive_only_elems), len(positive_only_elem_steps), n_ages, n_Zs, len(sspNew)))
+    positive_only_templates = np.empty(
+        (len(positive_only_elems), len(positive_only_elem_steps), n_ages, n_Zs, len(sspNew))
+    )
     general_templates = np.empty((len(normal_elems), len(elem_steps), n_ages, n_Zs, len(sspNew)))
-    
+
     na_templates = np.empty((len(Na_elem_steps), n_ages, n_Zs, len(sspNew)))
     carbon_templates = np.empty((len(C_elem_steps), n_ages, n_Zs, len(sspNew)))
     T_templates = np.empty((len(T_steps), n_ages, n_Zs, len(sspNew)))
 
-    print('Making the Positive-Only Correction templates')
-    #Do the positve only correction templates:
+    print("Making the Positive-Only Correction templates")
+    # Do the positve only correction templates:
     for a, elem in enumerate(positive_only_elems):
-        print('\t{}'.format(elem))
+        print("\t{}".format(elem))
         for b, step in enumerate(positive_only_elem_steps):
             for c, _ in enumerate(ages):
                 for d, _ in enumerate(Zs):
 
-                    if step !=0.0:
-                        y=(var_elem_spectra[elem].flam[c, d, t_mask]/var_elem_spectra['Solar'].flam[c, d, t_mask] - 1.0)*((10**(step)-1.0)/(10**(0.3)-1.0))
-
+                    if step != 0.0:
+                        y = (
+                            var_elem_spectra[elem].flam[c, d, t_mask]
+                            / var_elem_spectra["Solar"].flam[c, d, t_mask]
+                            - 1.0
+                        ) * ((10 ** (step) - 1.0) / (10 ** (0.3) - 1.0))
 
                     else:
-                        y=np.zeros_like(var_elem_spectra['Solar'].flam[c, d, t_mask])
+                        y = np.zeros_like(var_elem_spectra["Solar"].flam[c, d, t_mask])
 
+                    x = var_elem_spectra[elem].lam[t_mask]
+                    # Make a new lamda array, carrying on the delta lamdas of high resolution bit
+                    new_x = new_wavelength_array_high_resolution(x)
+                    interp = si.interp1d(x, y, fill_value="extrapolate")
+                    data = interp(new_x)
 
-                    x=var_elem_spectra[elem].lam[t_mask]
-                    #Make a new lamda array, carrying on the delta lamdas of high resolution bit
-                    new_x=new_wavelength_array_high_resolution(x)
-                    interp=si.interp1d(x, y, fill_value='extrapolate')
-                    data=interp(new_x)
-                            
-                    sspNew, logLam_template, template_velscale = P.log_rebin(templates_lam_range, data, velscale=velscale)
+                    sspNew, logLam_template, template_velscale = P.log_rebin(
+                        templates_lam_range, data, velscale=velscale
+                    )
                     if instrumental_resolution is not None:
-                        sspNew = P.gaussian_filter1d(sspNew, instrumental_resolution/velscale)
+                        sspNew = P.gaussian_filter1d(sspNew, instrumental_resolution / velscale)
 
-                    positive_only_templates[a, b, c, d, :]=sspNew
+                    positive_only_templates[a, b, c, d, :] = sspNew
 
-
-    print('Making the General Correction templates')
-    #Do the general templates
+    print("Making the General Correction templates")
+    # Do the general templates
     for a, elem in enumerate(normal_elems):
-        
-        print('\t{}'.format(elem))
+
+        print("\t{}".format(elem))
         for b, step in enumerate(elem_steps):
             for c, _ in enumerate(ages):
                 for d, _ in enumerate(Zs):
 
-                    if step>0.0:
-                        e='{}+'.format(elem)
-                        gen_step=step
-                    elif step<0.0:
-                        e='{}-'.format(elem)
-                        gen_step=np.abs(step)
+                    if step > 0.0:
+                        e = "{}+".format(elem)
+                        gen_step = step
+                    elif step < 0.0:
+                        e = "{}-".format(elem)
+                        gen_step = np.abs(step)
 
-                    if step !=0.0:
-                        y=(var_elem_spectra[e].flam[c, d, t_mask]/var_elem_spectra['Solar'].flam[c, d, t_mask]-1)*((10**(gen_step)-1.0)/(10**(0.3)-1.0))
+                    if step != 0.0:
+                        y = (
+                            var_elem_spectra[e].flam[c, d, t_mask]
+                            / var_elem_spectra["Solar"].flam[c, d, t_mask]
+                            - 1
+                        ) * ((10 ** (gen_step) - 1.0) / (10 ** (0.3) - 1.0))
                     else:
-                        y=np.zeros_like(var_elem_spectra['Solar'].flam[c, d, t_mask])
+                        y = np.zeros_like(var_elem_spectra["Solar"].flam[c, d, t_mask])
 
-                    x=var_elem_spectra[e].lam[t_mask]
-                    #Make a new lamda array, carrying on the delta lamdas of high resolution bit
-                    new_x=new_wavelength_array_high_resolution(x)
-                    interp=si.interp1d(x, y, fill_value='extrapolate')
-                    data=interp(new_x)
+                    x = var_elem_spectra[e].lam[t_mask]
+                    # Make a new lamda array, carrying on the delta lamdas of high resolution bit
+                    new_x = new_wavelength_array_high_resolution(x)
+                    interp = si.interp1d(x, y, fill_value="extrapolate")
+                    data = interp(new_x)
 
-                    #data=util.gaussian_filter1d(data, sigs/velscale)
+                    # data=util.gaussian_filter1d(data, sigs/velscale)
 
-                    sspNew, logLam_template, template_velscale = P.log_rebin(templates_lam_range, data, velscale=velscale)
+                    sspNew, logLam_template, template_velscale = P.log_rebin(
+                        templates_lam_range, data, velscale=velscale
+                    )
                     if instrumental_resolution is not None:
-                        sspNew = P.gaussian_filter1d(sspNew, instrumental_resolution/velscale)
+                        sspNew = P.gaussian_filter1d(sspNew, instrumental_resolution / velscale)
 
-                    general_templates[a, b, c, d, :]=sspNew
+                    general_templates[a, b, c, d, :] = sspNew
 
-    # Make the Carbon templates        
+    # Make the Carbon templates
     # Treat Carbon differently because it's templates are at +0.15 and -0.15 dex rather than +0.3 and -0.3 dex
-    print('Making the Carbon Correction template')
+    print("Making the Carbon Correction template")
     for b, step in enumerate(C_elem_steps):
         for c, _ in enumerate(ages):
             for d, _ in enumerate(Zs):
 
-                if step>0.0:
-                    e='{}+'.format(elem)
-                    gen_step=step
-                elif step<0.0:
-                    e='{}-'.format(elem)
-                    gen_step=np.abs(step)
+                if step > 0.0:
+                    e = "{}+".format(elem)
+                    gen_step = step
+                elif step < 0.0:
+                    e = "{}-".format(elem)
+                    gen_step = np.abs(step)
 
-                if step !=0.0:
-                    y=(var_elem_spectra[e].flam[c, d, t_mask]/var_elem_spectra['Solar'].flam[c, d, t_mask]-1)*((10**(gen_step)-1.0)/(10**(0.15)-1.0))
+                if step != 0.0:
+                    y = (
+                        var_elem_spectra[e].flam[c, d, t_mask]
+                        / var_elem_spectra["Solar"].flam[c, d, t_mask]
+                        - 1
+                    ) * ((10 ** (gen_step) - 1.0) / (10 ** (0.15) - 1.0))
                 else:
-                    y=np.zeros_like(var_elem_spectra['Solar'].flam[c, d, t_mask])
+                    y = np.zeros_like(var_elem_spectra["Solar"].flam[c, d, t_mask])
 
-                x=var_elem_spectra[e].lam[t_mask]
-                #Make a new lamda array, carrying on the delta lamdas of high resolution bit
-                new_x=new_wavelength_array_high_resolution(x)
-                interp=si.interp1d(x, y, fill_value='extrapolate')
-                data=interp(new_x)
+                x = var_elem_spectra[e].lam[t_mask]
+                # Make a new lamda array, carrying on the delta lamdas of high resolution bit
+                new_x = new_wavelength_array_high_resolution(x)
+                interp = si.interp1d(x, y, fill_value="extrapolate")
+                data = interp(new_x)
 
-                #data=util.gaussian_filter1d(data, sigs/velscale)
+                # data=util.gaussian_filter1d(data, sigs/velscale)
 
-                sspNew, logLam_template, template_velscale = P.log_rebin(templates_lam_range, data, velscale=velscale)
+                sspNew, logLam_template, template_velscale = P.log_rebin(
+                    templates_lam_range, data, velscale=velscale
+                )
                 if instrumental_resolution is not None:
-                        sspNew = P.gaussian_filter1d(sspNew, instrumental_resolution/velscale)
+                    sspNew = P.gaussian_filter1d(sspNew, instrumental_resolution / velscale)
 
-                carbon_templates[b, c, d, :]=sspNew
+                carbon_templates[b, c, d, :] = sspNew
 
-    #Do the Na templates:
-    print('Making the Na Correction template')
+    # Do the Na templates:
+    print("Making the Na Correction template")
     for a, step in enumerate(Na_elem_steps):
         for b, _ in enumerate(ages):
             for c, _ in enumerate(Zs):
 
-                if step <0.0:
-                    e='Na-'
-                    base_enhancement=0.3
-                    Na_step=np.abs(step)                    
-                elif 0.0<=step<0.45:
-                    e='Na+'
-                    base_enhancement=0.3
-                    Na_step=step
-                elif 0.45<=step<0.75:
-                    e='Na+0.6'
-                    base_enhancement=0.6
-                    Na_step=step
-                elif 0.75<=step<1.0:
-                    e='Na+0.9'
-                    base_enhancement=0.9
-                    Na_step=step
-                
-                if step !=0.0:
-                    y=(var_elem_spectra[e].flam[b, c, t_mask]/var_elem_spectra['Solar'].flam[b, c, t_mask]-1)*((10**(Na_step)-1.0)/(10**(base_enhancement)-1.0))
+                if step < 0.0:
+                    e = "Na-"
+                    base_enhancement = 0.3
+                    Na_step = np.abs(step)
+                elif 0.0 <= step < 0.45:
+                    e = "Na+"
+                    base_enhancement = 0.3
+                    Na_step = step
+                elif 0.45 <= step < 0.75:
+                    e = "Na+0.6"
+                    base_enhancement = 0.6
+                    Na_step = step
+                elif 0.75 <= step < 1.0:
+                    e = "Na+0.9"
+                    base_enhancement = 0.9
+                    Na_step = step
+
+                if step != 0.0:
+                    y = (
+                        var_elem_spectra[e].flam[b, c, t_mask]
+                        / var_elem_spectra["Solar"].flam[b, c, t_mask]
+                        - 1
+                    ) * ((10 ** (Na_step) - 1.0) / (10 ** (base_enhancement) - 1.0))
 
                 else:
 
-                    y=np.zeros_like(var_elem_spectra['Solar'].flam[b, c, t_mask])
+                    y = np.zeros_like(var_elem_spectra["Solar"].flam[b, c, t_mask])
 
+                x = var_elem_spectra[e].lam[t_mask]
+                # Make a new lamda array, carrying on the delta lamdas of high resolution bit
+                new_x = new_wavelength_array_high_resolution(x)
+                interp = si.interp1d(x, y, fill_value="extrapolate")
+                data = interp(new_x)
 
-                x=var_elem_spectra[e].lam[t_mask]
-                #Make a new lamda array, carrying on the delta lamdas of high resolution bit
-                new_x=new_wavelength_array_high_resolution(x)
-                interp=si.interp1d(x, y, fill_value='extrapolate')
-                data=interp(new_x)
-
-                    
-                sspNew, logLam_template, template_velscale = P.log_rebin(templates_lam_range, data, velscale=velscale)
+                sspNew, logLam_template, template_velscale = P.log_rebin(
+                    templates_lam_range, data, velscale=velscale
+                )
                 if instrumental_resolution is not None:
-                        sspNew = P.gaussian_filter1d(sspNew, instrumental_resolution/velscale)
+                    sspNew = P.gaussian_filter1d(sspNew, instrumental_resolution / velscale)
 
-                na_templates[a, b, c, :]=sspNew
+                na_templates[a, b, c, :] = sspNew
 
-
-    print('Making the Temperature Correction template')
+    print("Making the Temperature Correction template")
     for a, step in enumerate(T_steps):
         for b, _ in enumerate(ages):
             for c, _ in enumerate(Zs):
 
-                if step>0.0:
-                    e='T+'
-                    T_step=step
-                elif step<0.0:
-                    e='T-'
-                    T_step=np.abs(step)
-            
-                if step !=0.0:
-                    y=(var_elem_spectra[e].flam[b, c, t_mask]/var_elem_spectra['Solar'].flam[b, c, t_mask]-1)*(T_step/50.0)
+                if step > 0.0:
+                    e = "T+"
+                    T_step = step
+                elif step < 0.0:
+                    e = "T-"
+                    T_step = np.abs(step)
+
+                if step != 0.0:
+                    y = (
+                        var_elem_spectra[e].flam[b, c, t_mask]
+                        / var_elem_spectra["Solar"].flam[b, c, t_mask]
+                        - 1
+                    ) * (T_step / 50.0)
 
                 else:
 
-                    y=np.zeros_like(var_elem_spectra['Solar'].flam[b, c, t_mask])
+                    y = np.zeros_like(var_elem_spectra["Solar"].flam[b, c, t_mask])
 
+                x = var_elem_spectra[e].lam[t_mask]
+                # Make a new lamda array, carrying on the delta lamdas of high resolution bit
+                new_x = new_wavelength_array_high_resolution(x)
+                interp = si.interp1d(x, y, fill_value="extrapolate")
+                data = interp(new_x)
 
-                x=var_elem_spectra[e].lam[t_mask]
-                #Make a new lamda array, carrying on the delta lamdas of high resolution bit
-                new_x=new_wavelength_array_high_resolution(x)
-                interp=si.interp1d(x, y, fill_value='extrapolate')
-                data=interp(new_x)
-
-                    
-                sspNew, logLam_template, template_velscale = P.log_rebin(templates_lam_range, data, velscale=velscale)
+                sspNew, logLam_template, template_velscale = P.log_rebin(
+                    templates_lam_range, data, velscale=velscale
+                )
                 if instrumental_resolution is not None:
-                        sspNew = P.gaussian_filter1d(sspNew, instrumental_resolution/velscale)
+                    sspNew = P.gaussian_filter1d(sspNew, instrumental_resolution / velscale)
 
-                T_templates[a, b, c, :]=sspNew
+                T_templates[a, b, c, :] = sspNew
 
-    return [general_templates, na_templates, carbon_templates, positive_only_templates, T_templates], logLam_template
+    return [
+        general_templates,
+        na_templates,
+        carbon_templates,
+        positive_only_templates,
+        T_templates,
+    ], logLam_template

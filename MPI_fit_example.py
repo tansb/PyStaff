@@ -4,7 +4,7 @@
 import numpy as np
 import emcee
 import os, sys
-import scipy.interpolate as si 
+import scipy.interpolate as si
 
 import lmfit as LM
 
@@ -20,7 +20,7 @@ def lnprob(T, theta, var_names, bounds, ret_specs=False):
 
     #Log prob function. T is an array of values
 
-    
+
     assert len(T)==len(var_names), 'Error! The number of variables and walker position shapes are different'
 
     #Prior information comes from the parameter bounds now
@@ -71,7 +71,7 @@ string_masked_wavelengths=["{} to {}".format(pair[0][0], pair[0][1]) for pair in
 
 #Mask pixels we don't want
 pixel_mask=np.ones_like(flux, dtype=bool)
-for array in masked_wavelengths:   
+for array in masked_wavelengths:
     m=SF.make_mask(lamdas, array)
     pixel_mask= m & pixel_mask
 
@@ -156,12 +156,12 @@ with MPIPool() as pool:
     theta.add('age', value=13.0, min=1.0, max=14.0)
     theta.add('Z', value=0.0, min=-1.0, max=0.2)
     theta.add('imf_x1', value=2.35, min=0.5, max=3.5)
-    theta.add('imf_x2', value=2.35, min=0.5, max=3.5) 
+    theta.add('imf_x2', value=2.35, min=0.5, max=3.5)
 
-    #Strengths of skylines 
-    theta.add('O2_Scale', value=0.0, min=-100000000, max=100000000, vary=False) 
-    theta.add('sky_Scale', value=0.0, min=-100000000, max=100000000, vary=False) 
-    theta.add('OH_Scale', value=0.0, min=-100000000, max=100000000, vary=False) 
+    #Strengths of skylines
+    theta.add('O2_Scale', value=0.0, min=-100000000, max=100000000, vary=False)
+    theta.add('sky_Scale', value=0.0, min=-100000000, max=100000000, vary=False)
+    theta.add('OH_Scale', value=0.0, min=-100000000, max=100000000, vary=False)
     theta.add('NaD_sky_scale', value=0.0, min=-100000000, max=100000000, vary=False)
 
     #Option to rescale the error bars up or down

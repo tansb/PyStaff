@@ -1,0 +1,5 @@
+conda create --name PyStaff python=3.10.12 ipython
+conda install ipython astropy matplotlib numpy pytest scipy
+conda install sphinxcontrib-napoleon m2r sphinx_rtd_theme
+pip install ppxf
+
