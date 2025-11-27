@@ -1,6 +1,4 @@
 #! /usr/bin/env python
-from __future__ import print_function
-
 ##############################################################################
 import numpy as np
 import emcee
@@ -8,13 +6,58 @@ import scipy.interpolate as si
 import lmfit as LM
 import matplotlib.pyplot as plt
 import corner
-
-import sys
+import pickle
+import os
+import argparse
 
 from pystaff.SpectralFitting import SpectralFit
 from pystaff import SpectralFitting_functs as SF
 
-from schwimmbad import MultiPool
+from schwimmbad import MPIPool
+
+# Get the number of steps, the input data file, and runname parsed from command-line arguments
+parser = argparse.ArgumentParser(description="Run spectral fitting with MCMC")
+parser.add_argument(
+    "--target",
+    type=str,
+    default=None,
+    help='Target name, either "red_eyebrow" or "rosetta_stones"',
+)
+parser.add_argument(
+    "--filename",
+    type=str,
+    default="data/REB_jwst.dat",
+    help="Input data file path (default: data/REB_jwst.dat)",
+)
+parser.add_argument(
+    "--nsteps", type=int, default=100, help="Number of MCMC steps (default is 100)"
+)
+
+parser.add_argument(
+    "--run-name",
+    type=str,
+    default=None,
+    help="Name for this run (default: auto-generated from nsteps)",
+)
+parser.add_argument(
+    "--nwalkers", type=int, default=70, help="Number of MCMC walkers (default: 70)"
+)
+
+args = parser.parse_args()
+
+# Generate run_name if not provided
+if args.run_name is None:
+    run_name = f"{args.filename.split('/')[-1].replace('.dat', '')}_steps{args.nsteps}"
+else:
+    run_name = args.run_name
+
+nsteps = args.nsteps
+nwalkers = args.nwalkers
+datafile = args.filename
+
+# make the ouput directory if it doesn't already exist
+output_dir = f"output_results/{args.target}/{run_name}/"
+os.makedirs(output_dir, exist_ok=True)
 
 
 # Likelihood function here. We could put it in the SpectraFitting class, but when
@@ -46,16 +89,25 @@ def lnprob(T, theta, var_names, bounds, ret_specs=False):
 # Can select either Kroupa or Salpeter to use with the SSP models
 element_imf = "kroupa"
 
-
 ####################################################
-# Read in the data
-datafile = "data/REB_jwst.dat"
-lamdas_orig, flux_orig, errors, pixel_weights, _ = np.genfromtxt(datafile, unpack=True)
+
+# Load the data
+# The instrumental resolution can be included if it's known. We need a value of sigma_inst in km/s
+# for every pixel. Otherwise put it as None
+lamdas_orig, flux_orig, errors, pixel_weights, instrumental_resolution_orig = np.genfromtxt(
+    datafile, unpack=True
+)
 
 # need to make the wavelength scale slightly more consistent.
-interper = si.interpolate.interp1d(x=lamdas_orig, y=flux_orig)
 lamdas = np.arange(lamdas_orig[0], lamdas_orig[-1], step=lamdas_orig[1] - lamdas_orig[0])
-flux = interper(lamdas)
+# reinterpolate the flux
+interper1 = si.interp1d(x=lamdas_orig, y=flux_orig)
+flux = interper1(lamdas)
+# Also need to reinterpret the instrumental resolution
+interper2 = si.interp1d(x=lamdas_orig, y=instrumental_resolution_orig)
+instrumental_resolution = interper2(lamdas)
+instrumental_resolution = None
+
 # TEST: shift the wavelength array to match the example one
 # lamdas -= 2230
 
@@ -63,11 +115,6 @@ fig, ax = plt.subplots()
 ax.plot(lamdas_orig, flux_orig, lw=0.5, label="Original wavelength grid")
 ax.plot(lamdas, flux, lw=0.5, label="Interpolated flux/wavelength")
 ax.legend()
-
-
-# The instrumental resolution can be included if it's known. We need a value of sigma_inst in km/s
-# for every pixel. Otherwise leave it as None
-instrumental_resolution = None
 
 # Sky Spectra
 # Give a list of 1D sky spectra to be scaled and subtracted during the fit
@@ -126,7 +173,6 @@ ALF_proj_dir = "/fred/oz041/tbarone/softwares/alf_rosetta_stones/"
 base_template_location = ALF_proj_dir + "/infiles/"
 varelem_template_location = ALF_proj_dir + "/infiles/"
 
-
 fit = SpectralFit(
     lamdas,
     flux,
@@ -146,7 +192,7 @@ fit.set_up_fit()
 # ------------------------------------------------------------------------------------
 # Wrap all the parameter setup + MCMC in a function so we can pass in an MPI pool
 # ------------------------------------------------------------------------------------
-def main(pool=None):
+def main(pool, nsteps=10, nwalkers=70):
     global fit  # used inside lnprob
 
     # Here are the available fit parameters
@@ -154,8 +200,8 @@ def main(pool=None):
     # The min and max values act as flat priors
     theta = LM.Parameters()
     # LOSVD parameters
-    theta.add("Vel", value=1600, min=-1000.0, max=10000.0)
-    theta.add("sigma", value=330.0, min=10.0, max=500.0)
+    theta.add("Vel", value=0, min=-1000.0, max=10000.0)
+    theta.add("sigma", value=210.0, min=10.0, max=700.0)
 
     # Abundance of Na. Treat this separately, since it can vary up to +1.0 dex
     theta.add("Na", value=0.5, min=-0.45, max=1.0, vary=True)
@@ -174,43 +220,22 @@ def main(pool=None):
 
     # Abundance of elements which can only vary above 0.0
     theta.add("as_Fe", value=0.0, min=0.0, max=0.45, vary=True)
-    theta.add("Cr", value=0.0, min=0.0, max=0.45, vary=False)
-    theta.add("Mn", value=0.0, min=0.0, max=0.45, vary=False)
-    theta.add("Ni", value=0.0, min=0.0, max=0.45, vary=False)
-    theta.add("Co", value=0.0, min=0.0, max=0.45, vary=False)
-    theta.add("Eu", value=0.0, min=0.0, max=0.45, vary=False)
-    theta.add("Sr", value=0.0, min=0.0, max=0.45, vary=False)
-    theta.add("K", value=0.0, min=0.0, max=0.45, vary=False)
-    theta.add("V", value=0.0, min=0.0, max=0.45, vary=False)
-    theta.add("Cu", value=0.0, min=0.0, max=0.45, vary=False)
-
-    # Emission line kinematics
-    # Each line is fixed to the same velocity and sigma
-    theta.add("Vel_em", value=1600, min=0.0, max=10000)
-    theta.add("sig_em", value=200.0, min=10.0, max=500.0)
-
-    # Emission line strengths
-    # These are log flux- they get exponentiated in the likelihood function
-    theta.add("Ha", value=1.0, min=-10.0, max=10.0, vary=False)
-    theta.add("Hb", value=0.3, min=-10.0, max=10.0, vary=False)
-    theta.add("NII", value=0.5, min=-10.0, max=10.0, vary=False)
-    theta.add("SII_6716", value=0.5, min=-10.0, max=10.0, vary=False)
-    theta.add("SII_6731", value=0.5, min=-10.0, max=10.0, vary=False)
-    theta.add("OIII", value=-2.0, min=-10.0, max=10.0, vary=False)
-    theta.add("OI", value=-2.0, min=-10.0, max=10.0, vary=False)
+    theta.add("Cr", value=0.0, min=0.0, max=0.45, vary=True)
+    theta.add("Mn", value=0.0, min=0.0, max=0.45, vary=True)
+    theta.add("Ni", value=0.0, min=0.0, max=0.45, vary=True)
+    theta.add("Co", value=0.0, min=0.0, max=0.45, vary=True)
+    theta.add("Eu", value=0.0, min=0.0, max=0.45, vary=True)
+    theta.add("Sr", value=0.0, min=0.0, max=0.45, vary=True)
+    theta.add("K", value=0.0, min=0.0, max=0.45, vary=True)
+    theta.add("V", value=0.0, min=0.0, max=0.45, vary=True)
+    theta.add("Cu", value=0.0, min=0.0, max=0.45, vary=True)
 
     # Base population parameters
     # Age, Metallicity, and the two IMF slopes
-    theta.add("age", value=13.0, min=1.0, max=14.0)
-    theta.add("Z", value=0.0, min=-1.0, max=0.2)
+    theta.add("age", value=3.1, min=1.0, max=14.0)
+    theta.add("Z", value=-0.2, min=-1.0, max=0.2)
     theta.add("imf_x1", value=2.35, min=0.5, max=3.5)
     theta.add("imf_x2", value=2.35, min=0.5, max=3.5)
-
-    # Strengths of skylines
-    theta.add("O2_Scale", value=0.0, min=-100000000, max=100000000, vary=False)
-    theta.add("sky_Scale", value=0.0, min=-100000000, max=100000000, vary=False)
-    theta.add("OH_Scale", value=0.0, min=-100000000, max=100000000, vary=False)
-    theta.add("NaD_sky_scale", value=0.0, min=-100000000, max=100000000, vary=False)
 
     # Option to rescale the error bars up or down
     theta.add("ln_f", value=0.0, min=-5.0, max=5.0, vary=True)
@@ -222,6 +247,8 @@ def main(pool=None):
     fixed = [
         "{}={},".format(thing, theta[thing].value) for thing in theta if not theta[thing].vary
     ]
+    print("fixed variables are: ", fixed)
+    print("variable variables are: ", variables)
 
     # Added by TBAR
     fit.fit_settings["emission_lines"] = None
@@ -229,34 +256,31 @@ def main(pool=None):
     # Optionally plot the fit with our initial guesses
     SF.plot_fit(theta, fit.fit_settings)
 
-    ###################################################################################################
-    # Set up the initial positions of the walkers as a ball with a different standard deviation in each
-    # dimension
-    nwalkers = 70
-    nsteps = 100
+    ###############################################################################################
+    # Set up the initial positions of the walkers as a ball with a different standard deviation in
+    # each dimension
+    nwalkers = nwalkers
+    nsteps = nsteps
 
     # Get the spread of the starting positions
     stds = []
     n_general = 9
-    n_positive = 1
-    n_emission_lines = 0
+    n_positive = 10
 
     # Add in all these standard deviations
     # Kinematic parameters
-    stds.extend([100.0, 50.0])
+    stds.extend([100.0, 25.0])
     # General parameters
     stds.extend([0.1] * n_general)
     # Positive parameters
     stds.extend([0.1] * n_positive)
-    # Emission lines
-    stds.extend([100.0, 50.0])
-    stds.extend([1.0] * n_emission_lines)
+
     # Age
     stds.extend([1.0])
+
     # Z, imf1, imf2
     stds.extend([0.1, 0.1, 0.1])
-    # Sky
-    # stds.extend([100.0,  100.0,  100.0, 100.0])
+
     # ln_f
     stds.extend([0.5])
 
@@ -277,7 +301,7 @@ def main(pool=None):
 
     print("Running the fitting with {} walkers for {} steps".format(nwalkers, nsteps))
     sampler = emcee.EnsembleSampler(
-        nwalkers, ndim, lnprob, args=[theta, variables, bounds], pool=None
+        nwalkers, ndim, lnprob, args=[theta, variables, bounds], pool=pool
     )
     result = sampler.run_mcmc(p0, nsteps)
 
@@ -286,8 +310,8 @@ def main(pool=None):
     chain = sampler.get_chain()
 
     # get rid of the burn-in
-    burnin = np.array(nsteps - 5000).clip(0)
-    samples = chain[:, burnin:, :].reshape((-1, ndim))
+    burnin = np.array(nsteps - 200).clip(0)
+    samples = chain[burnin:, :, :].reshape((-1, ndim))
     print("\tDone")
 
     # Get the 16th, 50th and 84th percentiles of the marginalised posteriors for each parameter
@@ -309,7 +333,7 @@ def main(pool=None):
     results_theta = LM.Parameters()
     for v, r in zip(variables, best_results):
         print(v, r)
-        results_theta.add("{}".format(v), value=r[0], vary=False)
+        results_theta.add("{}".format(v), value=r[0], vary=True)
     # and include the things we kept fixed originally too:
     [
         results_theta.add("{}".format(thing), value=theta[thing].value, vary=False)
@@ -320,8 +344,12 @@ def main(pool=None):
     # ... and plot
     SF.plot_fit(results_theta, fit.fit_settings)
 
-    # Optionally save samples
-    np.savetxt("samples_mpi.txt", samples)
+    # Save samples
+    np.savetxt(f"{output_dir}mpi_samples.txt", samples)
+
+    # and save the results_theta object
+    with open(f"{output_dir}results_theta.pckl", "wb") as file:
+        pickle.dump(results_theta, file)
 
 
 # ------------------------------------------------------------------------------------
@@ -329,22 +357,44 @@ def main(pool=None):
 # ------------------------------------------------------------------------------------
 
 # Choose how many worker processes you want – e.g. number of physical cores
-nproc = 4  # tweak as appropriate for your machine
+nproc = int(os.environ.get("SLURM_NTASKS", 4))  # defaults to 4 if not in SLURM
 
-print(f"Using MultiPool with {nproc} processes")
-with MultiPool(processes=nproc) as pool:
-    main(pool=pool)
+# print(f"Using MPIPool with {nproc} processes")
+# with MultiPool(processes=nproc) as pool:
+#    main(pool=pool, nsteps=nsteps, nwalkers=nwalkers)
 
+# Use MPI for cluster parallelization
+# with MPIPool() as pool:
+#    if not pool.is_master():
+#        pool.wait()
+#        sys.exit(0)
+#
+#    print(f"Running with {pool.size} MPI processes")
+#
 
-plt.savefig("figs/fit_results.pdf")
+main(pool=None, nsteps=nsteps, nwalkers=nwalkers)
+
+# Save the fit figure
+plt.savefig(f"{output_dir}fit_results.pdf")
+
+# and save the object as a pickle
+with open(f"{output_dir}fit_obj.pckl", "wb") as file:
+    pickle.dump(fit, file)
 
 ####################################################################################################
 
 # It's always a good idea to inspect the traces
 # Can also make corner plots, if you have corner available:
-# import corner
-# corner.corner(samples, labels=variables)
-# plt.savefig('corner_plot.pdf')
+
+# reload the saved mcmc chains and results_theta
+# samples = np.genfromtxt(f"{output_dir}mpi_samples.txt")
+
+# with open(f"{output_dir}restults_theta.pckl", "rb") as file:
+#    results_theta = pickle.load(file)
+
+# corner.corner(samples, labels=list(results_theta.keys()))
+# plt.savefig(f"{output_dir}corner_plot.pdf")
+
 # And you should inspect the residuals around the best fit as a function of wavelength
 
 ###################################################################################################

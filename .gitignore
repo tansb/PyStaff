@@ -1,3 +1,7 @@
 *.pyc
 .DS_Store
 data/*.dat
+slurm*.out
+._*
+output_results/*
+tbar_files/*
